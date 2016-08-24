@@ -13,34 +13,40 @@
 </head>
 <body>
 
-<div id='map'></div>
+<div id='map'>
+   <input id='slider' type='range' min='0' max='2' step='1' value='0' />
+</div>
 <script>
-mapboxgl.accessToken = '<your token here>';
+mapboxgl.accessToken = 'pk.eyJ1Ijoicm9ibGFicyIsImEiOiJwVlg0cnZnIn0.yhekddtKwZohGoORaWjqIw';
+
+var tilesNASAGeoTiffs = [
+  'mapbox://roblabs.7zxu41yf',
+  'mapbox://roblabs.cejiypsd',
+  'mapbox://roblabs.0ec3onax'
+]
 var map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/light-v9',
-    zoom: 13,
+    style: 'mapbox://styles/roblabs/cis7vxsp60003gknrtghph7wx',
+    zoom: 3,
     center: [-122.447303, 37.753574]
 });
 
 map.on('load', function () {
-    map.addSource('terrain-data', {
+    map.addSource('currentMap', {
         type: 'vector',
-        url: 'mapbox://mapbox.mapbox-terrain-v2'
+        url: 'mapbox://roblabs.7zxu41yf'
     });
-    map.addLayer({
-        "id": "terrain-data",
-        "type": "line",
-        "source": "terrain-data",
-        "source-layer": "contour",
-        "layout": {
-            "line-join": "round",
-            "line-cap": "round"
-        },
-        "paint": {
-            "line-color": "#ff69b4",
-            "line-width": 1
-        }
+});
+
+document.getElementById('slider').addEventListener('input', function(e) {
+    var index = parseInt(e.target.value, 10);
+    console.log(index);
+
+    // map.removeSource('currentMap');
+
+    map.addSource('currentMap', {
+        type: 'vector',
+        url: tilesNASAGeoTiffs[index]
     });
 });
 </script>
