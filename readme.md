@@ -2,13 +2,16 @@
 
 * The raw data from NASA has two ways to download Data
 
-1.  Web server - http://neo.sci.gsfc.nasa.gov/view.php?datasetId=MY1DMM_CHLORA&date=2016-07-01
+## Web server
+* http://neo.sci.gsfc.nasa.gov/view.php?datasetId=MY1DMM_CHLORA&date=2016-07-01
 * `curl` seems to fail, but `wget` will work
 * http://neo.sci.gsfc.nasa.gov/servlet/RenderData?si=1704506&cs=rgb&format=TIFF&width=3600&height=1800
 * Issue for automation, no way to reliably predict the values for si=.  
 
 
-2.  FTP server — ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA
+## FTP server
+
+* ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA
 
 The tool `wget` seems to work reliably with the FTP server and the file names for 1 month, 0.1 degree follows
 this convention
