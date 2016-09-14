@@ -41,8 +41,16 @@ gdal_translate -of VRT MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF clut.vrt
 #  This makes a file called clut.vrt that has the look up table
 #    with no modification it is a Blue to Yellow color ramp.
 #  In order to make a Blue to Red color ramp,
-#    the RGB data in clut.vrt needs to modified so that the c2 or Green channel is zero.  E.g.,
-#      <Entry	c1="8"	c2="0"	c3="88" c4="255" />
+#    Convert the incoming data which looks like
+#      <ColorTable>
+#        <Entry c1="8" c2="29" c3="88" c4="255" />
+#
+#    the RGB data in clut.vrt needs to modified so that the c2 goes from "29" to "0".  
+#    This has the effect of removing the c2 or Green channgel of the RGBAlpha file,
+#      thereby giving data that is on a Red to Blue gradient for the legend.
+#    E.g.,
+#      <ColorTable>
+#        <Entry	c1="8"	c2="0"	c3="88" c4="255" />
 #  This needs to be done for every TIFF file as the original Blue to Yellow ramp would be unique per data sample
 #
 cp clut.vrt clut.blue2red.vrt
