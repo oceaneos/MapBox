@@ -12,6 +12,8 @@
 ## FTP server
 
 * ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA
+![Neo FTP](images/FTP.png)
+
 
 The tool `wget` seems to work reliably with the FTP server and the file names for 1 month, 0.1 degree follows
 this convention

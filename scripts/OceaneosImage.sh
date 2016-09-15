@@ -7,7 +7,7 @@
 #     ./OceaneosImage.sh MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF
 
 # Convenience variables
-ZOOM=4
+ZOOM=6
 
 INPUT_TIFF=$1
 echo "Running Oceaneos Image Pipeline"
