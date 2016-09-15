@@ -1,7 +1,9 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
+#!/usr/bin/env python
 # Copyright 2016 ePi Rational, Inc.
 # Copyright 2016 Oceaneos Environmental Solutions, Inc
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -25,12 +27,12 @@ import os.path
 # Example Python code for various Python commands for GDAL
 # https://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html
 
-
-if len(sys.argv) < 2:
-     print "Usage: gdalNoGreen.py input output"
-     print "   example"
-     print "   gdalNoGreen.py clut.vrt out.vrt"
-     sys.exit(1)
+if (len(sys.argv) < 2):
+  print "Usage: gdalNoGreen.py input output"
+  print ""
+  print "Example"
+  print "   gdalNoGreen.py clut.vrt out.vrt"
+  sys.exit(1)
 
 input = sys.argv[1]
 output = sys.argv[2]
@@ -41,8 +43,8 @@ ZERO = 0
 
 dataset = gdal.Open( input, gdal.GA_Update )
 if dataset is None:
-    print 'Unable to open', input, 'for writing'
-    sys.exit(1)
+  print 'Unable to open', input, 'for writing'
+  sys.exit(1)
 
 # Assume that the VRT has a single band with the following set in the XML of the VRT file
 #   <ColorInterp>Palette</ColorInterp>
@@ -52,10 +54,14 @@ ctable = b1.GetColorTable()
 noGColorTable = ctable
 count = ctable.GetCount()
 
+
+if( __debug__):
+  countToPrint = 10  # Print out only the first 10 elements
+
 # Print out the first several entries of the original
 print "-----"
 print "input color entries"
-for i in range( 0, 10):
+for i in range( 0, countToPrint):
   entry = ctable.GetColorEntry( i )
   print "RGBA = ", ctable.GetColorEntry( i)
 
@@ -69,7 +75,8 @@ for i in range( 0, count):
   noGColorTable.SetColorEntry( i, tuple(entryNoGreen))  #  Convert back to a Python tuple, and set the new color Entry
   if not entry:
     continue
-  print "RGBA = ", ctable.GetColorEntry( i)
+  if (i < countToPrint):
+    print "RGBA = ", ctable.GetColorEntry( i)
 
 count = noGColorTable.GetCount()
 datasetNoGreen = dataset
@@ -79,6 +86,6 @@ ct.GetCount()
 ct.GetColorEntry(0)
 
 # Write out the output
-print ("writing file ", output)
+print "writing file ", output
 driver = gdal.GetDriverByName('VRT')
 driver.CreateCopy( output, datasetNoGreen)
