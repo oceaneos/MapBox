@@ -53,8 +53,7 @@ gdal_translate -of VRT MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF clut.vrt
 #        <Entry	c1="8"	c2="0"	c3="88" c4="255" />
 #  This needs to be done for every TIFF file as the original Blue to Yellow ramp would be unique per data sample
 #
-cp clut.vrt clut.blue2red.vrt
-# TODO - automation - edit the lut to make blue2red
+gdalNoGreen.py clut.vrt clut.blue2red.vrt
 
 # Apply the blue to red color look up table
 gdal_translate clut.blue2red.vrt MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.clut.blue2red.TIFF
