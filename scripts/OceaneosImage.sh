@@ -7,7 +7,7 @@
 #     ./OceaneosImage.sh MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF
 
 # Convenience variables
-ZOOM=6
+ZOOM=1
 
 INPUT_TIFF=$1
 echo "Running Oceaneos Image Pipeline"
@@ -38,7 +38,7 @@ BLUERED_COLOR_TABLE_CHECK=check.$INPUT_DATE.blue-red.colortable.vrt
 FINAL_VRT=$FILE_NAME_NO_EXT.vrt
 
 #TIFF files
-BLUERED_TIFF=$FILE_NAME_NO_EXT.blue2red.TIFF
+BLUERED_TIFF=blue2red.$FILE_NAME_NO_EXT.tif
 
 # Mbtile
 MBTILES=$FILE_NAME_NO_EXT.mbtiles
