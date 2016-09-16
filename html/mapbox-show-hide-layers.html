@@ -4,8 +4,8 @@
     <meta charset='utf-8' />
     <title></title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.22.1/mapbox-gl.js'></script>
-    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.22.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.23.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.23.0/mapbox-gl.css' rel='stylesheet' />
     <style>
         body { margin:0; padding:0; }
         #map { position:absolute; top:0; bottom:0; width:100%; }
@@ -14,17 +14,15 @@
 <body>
 
 <div id='map'>
-   <!-- <input id='slider' type='range' min='0' max='2' step='1' value='0' /> -->
-   <!-- <div id='menu'> -->
-    <!-- <input id='7zxu41yf' type='radio' name='rtoggle' value='7zxu41yf' checked='checked'> -->
-      <!-- <label for='7zxu41yf'>54 MB PNG, 512 px, GDAL</label> -->
-    <!-- <input id='cejiypsd' type='radio' name='rtoggle' value='cejiypsd'> -->
-      <!-- <label for='cejiypsd'>37 MB PNG, 256 px, MapTiler</label> -->
-    <!-- <input id='3jz0zo7h' type='radio' name='rtoggle' value='3jz0zo7h'> -->
-      <!-- <label for='3jz0zo7h'>15 MB WEBP, 256 px, Studio</label> -->
+
+   <!-- The Slider -->
+   <label for="chlorophyll-data">CHLOROPHYLL CONCENTRATION (1 MONTH - AQUA/MODIS)</label>
+   <input type="range" min="0" step="1" max="6" value="0" id="chlorophyll-data"
+       oninput="outputUpdate(value)">
+   <output for="chlorophyll-data" id="volume"></output>
 
 </div>
-</div>
+
 <script>
 mapboxgl.accessToken = 'pk.eyJ1Ijoicm9ibGFicyIsImEiOiJwVlg0cnZnIn0.yhekddtKwZohGoORaWjqIw';
 
@@ -34,61 +32,45 @@ var previousLayer = "";
 var layerId = "";
 
 // convenience for source and for layer names
-var rootSourceUrlLayerId = { "rootSourceUrl": "mapbox://roblabs.",  "rootLayerId": "mapbox-roblabs-"};
+// TODO - change to your Mapbox account name from roblabs
+var rootSourceUrlLayerId = {
+  "rootSourceUrl": "mapbox://roblabs.",
+  "rootLayerId"  : "uniqueId-"
+};
 
 // Populate this list from those on Mapbox.com
 var tilesNASAGeoTiffsLayerIds = [
-  '65ttx4lp',
-'ab89rpu4',
-'24mkqt5e',
-  'ab89rpu4',
-  '17720l87',
-  '7zxu41yf',
-  'cejiypsd',
-  '0ec3onax'
+  'MY1DMM_CHLORA_2016-01',
+  'MY1DMM_CHLORA_2016-02',
+  'MY1DMM_CHLORA_2016-03',
+  'MY1DMM_CHLORA_2016-04',
+  'MY1DMM_CHLORA_2016-05',
+  'MY1DMM_CHLORA_2016-06',
+  'MY1DMM_CHLORA_2016-07'
 ];
 
-
+/**
+ * Initialize a new map
+ */
 var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/satellite-v9',
-    zoom: 3,
-    center: [-122.447303, 37.753574]
+    zoom: 0,
+    center: [0,0]
 });
 
-
+/**
+ * load -
+ * Fired immediately after all necessary resources have been downloaded
+ * and the first visually complete rendering of the map has occurred.
+ */
 map.on('load', function () {
-
- layerId = tilesNASAGeoTiffsLayerIds[0];
-
-  currentSource = rootSourceUrlLayerId.rootSourceUrl + layerId;
-  previousSource = currentSource;
-
-  currentLayer = rootSourceUrlLayerId.rootLayerId + layerId;
-  previousLayer = currentLayer;
-
-  map.addSource(currentSource, {
-        "url": currentSource,
-        "type": "raster"
-      });
-
-  map.addLayer({
-      "id": currentLayer,
-      "type": "raster",
-      "source": currentSource,
-      "interactive": true,
-      "layout": {
-          "visibility": "visible"
-      }
-  });
+  switchLayer(0);
 });
-
-var layerList = document.getElementById('menu');
-var inputs = layerList.getElementsByTagName('input');
-
 
 function switchLayer(layer) {
-    layerId = layer.target.id;
+    layerId = tilesNASAGeoTiffsLayerIds[layer];
+    document.querySelector('#volume').value = layerId;
 
     /*
       Update sources and layers
@@ -114,25 +96,31 @@ function switchLayer(layer) {
       Clean up older sources and layers
     */
 
-    // Remove current source, and add  new one
-    map.removeSource(previousSource);
-    previousSource = currentSource;
+    try {
+      // Remove older source
+      map.removeSource(previousSource);
+      previousSource = currentSource;
 
-    // Remove current layer, and add  new one
-    map.removeLayer(previousLayer);
-    previousLayer = currentLayer;
+      // Remove older layer
+      map.removeLayer(previousLayer);
+      previousLayer = currentLayer;
+
+    }
+    catch(err) {
+      console.log(err.message);
+    }
+
+
 
 }
 
-for (var i = 0; i < inputs.length; i++) {
-    inputs[i].onclick = switchLayer;
+
+function outputUpdate(sliderIndex) {
+  document.querySelector('#volume').value = tilesNASAGeoTiffsLayerIds[sliderIndex];
+  console.log(tilesNASAGeoTiffsLayerIds[sliderIndex]);
+  switchLayer(sliderIndex);
 }
 
-document.getElementById('slider').addEventListener('input', function(e) {
-    var index = parseInt(e.target.value, 10);
-    console.log(index);
-
-});
 </script>
 
 </body>

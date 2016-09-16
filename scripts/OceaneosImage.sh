@@ -8,6 +8,7 @@
 
 # Convenience variables
 ZOOM=1
+MAPBOX_ACCOUNT=roblabs
 
 INPUT_TIFF=$1
 echo "Running Oceaneos Image Pipeline"
@@ -70,4 +71,14 @@ gdal_translate -of vrt -expand rgba -a_nodata 0 $BLUERED_TIFF $FINAL_VRT
 gdal2tilesp.py -z 0-$ZOOM $FINAL_VRT
 
 # pack the cut tiles into an mbtile, https://github.com/mapbox/mbtiles-spec
+# creates a file called
+#    $FILE_NAME_NO_EXT.mbtiles
+# TODO - need attribution for NASA NEO
 mb-util $FILE_NAME_NO_EXT $MBTILES
+
+
+#  Upload to Mapbox
+# Be sure to set the environment variable
+# export MAPBOX_SUPER_TOKEN=<token from mapbox>
+cmd="mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $FILE_NAME_NO_EXT.mbtiles $MAPBOX_ACCOUNT.$FILE_NAME_NO_EXT"
+mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $FILE_NAME_NO_EXT.mbtiles $MAPBOX_ACCOUNT.$FILE_NAME_NO_EXT
