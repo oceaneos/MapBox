@@ -35,7 +35,7 @@ wget ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-07.
 
 ## Process a single file
 
-* This GDAL code will process a single file, there are manual steps that will need to be overcome before fully automation takes place
+* This GDAL code will process a single file
 
 ```sh
 gdal_translate -of VRT MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF clut.vrt
