@@ -1,18 +1,24 @@
-
+# Copyright 2016 ePi Rational, Inc.  All rights reserved.
+# Copyright 2016 Oceaneos Environmental Solutions, Inc.  All rights reserved.
 # Oceaneos Image Pipeline
 #   Usage
-#     ./OceaneosImage.sh INPUT_TIFF
+#     ./OceaneosImage.sh input_tiff --debug 2 --zoom 1 --mapbox_account roblabs
 #
 #   Example
-#     ./OceaneosImage.sh MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF
+#     ./OceaneosImage.sh MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF --zoom 1 --mapbox_account roblabs
 
-# Convenience variables
-ZOOM=1
-MAPBOX_ACCOUNT=roblabs
+# command line options
+while [[ "$#" > 1 ]]; do case $1 in
+    --input) input_tiff="$2";;
+    --debug) debug="$2";;
+    --zoom) zoom="$2";;
+    --mapbox_account) mapbox_account="$2";;
+    *) break;;
+  esac; shift; shift
+done
 
-INPUT_TIFF=$1
-echo "Running Oceaneos Image Pipeline"
-echo $INPUT_TIFF
+
+
 
 # Assume the date stamp is the third field of the file name
 #   Example,
@@ -20,65 +26,83 @@ echo $INPUT_TIFF
 #       echo "${array[2]}"
 #     will create the substring
 #       2016-07-01
-IFS='_' read -r -a array <<< "$INPUT_TIFF"
-INPUT_DATE="${array[2]}"
-echo $INPUT_DATE
+IFS='.' read -r -a fileName <<< "$input_tiff"
+file_name_no_ext="${fileName[0]}"
 
-IFS='.' read -r -a fileName <<< "$INPUT_TIFF"
-FILE_NAME_NO_EXT="${fileName[0]}"
-echo $FILE_NAME_NO_EXT
+IFS='_' read -r -a array <<< "$file_name_no_ext"
+input_date="${array[2]}"
+
 
 # Several steps implies several file names in Pipeline
 #   These are all the files that will be generated from the input
 # VRT files, used for color tables
-BLUEYELLOW_COLOR_TABLE=$INPUT_DATE.blue-yellow.colortable.vrt
-BLUERED_COLOR_TABLE=$INPUT_DATE.blue-red.colortable.vrt
-BLUERED_COLOR_TABLE_CHECK=check.$INPUT_DATE.blue-red.colortable.vrt
+blue_yellow_color_table=$input_date.blue-yellow.colortable.vrt
+blue_red_color_table=$input_date.blue-red.colortable.vrt
+blue_red_color_table_CHECK=check.$input_date.blue-red.colortable.vrt
 
 # Final VRT, ready to be cut up into layers for Mapbox.
-FINAL_VRT=$FILE_NAME_NO_EXT.vrt
+final_vrt=$file_name_no_ext.vrt
 
 #TIFF files
-BLUERED_TIFF=blue2red.$FILE_NAME_NO_EXT.tif
+blue_red_tiff=blue2red.$file_name_no_ext.tif
 
 # Mbtile
-MBTILES=$FILE_NAME_NO_EXT.mbtiles
+mbtiles=$file_name_no_ext.mbtiles
 
 # ----------------
 # make sure to remove any existing folders or .mbtiles so we know we have a fresh file
-rm -rf $FILE_NAME_NO_EXT
-rm $MBTILES
+rm -rf $file_name_no_ext
+rm $mbtiles
 
+if [ $debug -gt 1 ]
+then
+  echo "parameters"
+  echo "  debug =" $debug
+  echo "  input_tiff =" $input_tiff
+  echo "  zoom =" $zoom
+  echo "  mapbox_account =" $mapbox_account
+  echo ""
+  echo "Calculated values"
+  echo "  file_name_no_ext =" $file_name_no_ext
+  echo "  input_date =" $input_date
+  echo "  blue_yellow_color_table =" $blue_yellow_color_table
+  echo "  blue_red_color_table =" $blue_red_color_table
+  echo "  blue_red_color_table_CHECK =" $blue_red_color_table_CHECK
+  echo "  blue_red_tiff =" $blue_red_tiff
+  echo "  final_vrt =" $final_vrt
+  echo "  mbtiles =" $mbtiles
+  echo ""
+fi
 
 #  This makes a file that has the look up table
 #    with no modification it is the Blue to Yellow color ramp.
-gdal_translate -of VRT $INPUT_TIFF $BLUEYELLOW_COLOR_TABLE
+gdal_translate -of VRT $input_tiff $blue_yellow_color_table
 
 #  In order to make a Blue to Red color ramp, remove the green channel
-gdalNoGreen.py $BLUEYELLOW_COLOR_TABLE $BLUERED_COLOR_TABLE
+gdalNoGreen.py $blue_yellow_color_table $blue_red_color_table
 
 # Apply the blue to red color look up table
-gdal_translate $BLUERED_COLOR_TABLE $BLUERED_TIFF
+gdal_translate $blue_red_color_table $blue_red_tiff
 
 # Alternatively, check the red2blue color table actually took by inspecting a VRT
-gdal_translate -of VRT $BLUERED_TIFF $BLUERED_COLOR_TABLE_CHECK
+gdal_translate -of VRT $blue_red_tiff $blue_red_color_table_CHECK
 
 # Expand the data to four bands, rgba, and assign NODATA for transparency over land masses
-gdal_translate -of vrt -expand rgba -a_nodata 0 $BLUERED_TIFF $FINAL_VRT
+gdal_translate -of vrt -expand rgba -a_nodata 0 $blue_red_tiff $final_vrt
 
 # Prepare temp.vrt for "slippy" map tiles, one step closer to Mapbox
 #  Zoom level 0 (whole earth) to a reasonalbe zoom level of 6.
-gdal2tilesp.py -z 0-$ZOOM $FINAL_VRT
+gdal2tilesp.py -z 0-$zoom $final_vrt
 
 # pack the cut tiles into an mbtile, https://github.com/mapbox/mbtiles-spec
 # creates a file called
-#    $FILE_NAME_NO_EXT.mbtiles
+#    $file_name_no_ext.mbtiles
 # TODO - need attribution for NASA NEO
-mb-util $FILE_NAME_NO_EXT $MBTILES
+mb-util $file_name_no_ext $mbtiles
 
 
 #  Upload to Mapbox
 # Be sure to set the environment variable
 # export MAPBOX_SUPER_TOKEN=<token from mapbox>
-cmd="mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $FILE_NAME_NO_EXT.mbtiles $MAPBOX_ACCOUNT.$FILE_NAME_NO_EXT"
-mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $FILE_NAME_NO_EXT.mbtiles $MAPBOX_ACCOUNT.$FILE_NAME_NO_EXT
+echo "mapbox --access-token=\$MAPBOX_SUPER_TOKEN upload $file_name_no_ext.mbtiles $mapbox_account.$file_name_no_ext"
+mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $file_name_no_ext.mbtiles $mapbox_account.$file_name_no_ext
