@@ -23,15 +23,16 @@ MY1DMM_CHLORA_yyyy-mm.TIFF
 For example to fetch the 2015 sample data, you could issue this commands
 
 ```sh
-wget ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-01.TIFF
-wget ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-02.TIFF
-wget ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-03.TIFF
-wget ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-04.TIFF
-wget ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-05.TIFF
-wget ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-06.TIFF
-wget ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-07.TIFF
+wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-01.TIFF
+wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-02.TIFF
+wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-03.TIFF
+wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-04.TIFF
+wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-05.TIFF
+wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-06.TIFF
+wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-07.TIFF
 ```
-
+wget option -N
+>   `-N,  --timestamping              don't re-retrieve files unless newer than local`
 
 ## Process a single file
 
