@@ -13,8 +13,10 @@
 
 * ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA
 * The full listing of the current files on the server can be found using `wget --no-remove-listing <TIFF file>`, which generates a file called [`.listing`](NEO-FTP.listing.txt)
+
 ![Neo FTP](images/FTP.png)
 
+### wget
 
 The tool `wget` seems to work reliably with the FTP server and the file names for 1 month, 0.1 degree follows
 this convention
@@ -34,6 +36,24 @@ wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/MY1DMM_CHLORA_2016-
 ```
 wget option -N
 >   `-N,  --timestamping              don't re-retrieve files unless newer than local`
+
+
+To `wget` many files a script like this can be used.  
+
+```sh
+ftp_root=ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/
+root=MY1DMM_CHLORA
+min_year=2002
+max_year=2017  # TODO compute current year & month
+month=12
+for y in `seq $min_year $max_year`
+do
+  for m in `seq 1 $month`
+  do
+      echo  wget -n "$ftp_root""$root"_"$y"-"$m".TIFF
+  done
+done
+```
 
 ## Process a single file
 
