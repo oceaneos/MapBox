@@ -93,8 +93,13 @@ gdal_translate -of vrt -expand rgba -a_nodata 0 MY1DMM_CHLORA_2016-07-01_rgb_360
 gdal2tiles.py -z 0-6 temp.vrt
 mb-util temp MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.mbtiles
 
-# Upload to Mapbox the file MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.mbtiles 
-
-
+# Upload to Mapbox the file MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.mbtiles
 
 ```
+
+### Upload to Mapbox
+
+* The Upload api is from Mapbox, and is a [Python based command line script](https://github.com/mapbox/mapbox-cli-py)
+* Several files can uploaded at once and the status of uploads is monitored within the Mapbox account at http://Mapbox.com/studio
+
+![OceaneosUpload.png](images/OceaneosUpload.png)
