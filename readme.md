@@ -12,6 +12,7 @@
 ## FTP server
 
 * ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA
+* The full listing of the current files on the server can be found using `wget --no-remove-listing <TIFF file>`, which generates a file called [`.listing`](NEO-FTP.listing.txt)
 ![Neo FTP](images/FTP.png)
 
 
