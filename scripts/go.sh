@@ -20,15 +20,22 @@ max_year=2016
 # TODO would prefer to iterate over 'date +%m', doesn't work properly in this script on macOS
 months="01 02 03 04 05 06 07 08 09 10 11 12"
 
+mapbox_account=mriedijk
+zoom=6
+
 
 for y in `seq $min_year $max_year`
 do
   for m in $months
   do
-      wgetCmd="wget -N $ftp_root$root_$y-$m.TIFF"
+      file="MY1DMM_CHLORA_$y-$m.TIFF"
+      wgetCmd="wget -N $ftp_root$file"
       echo $wgetCmd
-      cmd="./OceaneosImage.sh --input $f --debug 2 --zoom 1 --mapbox_account roblabs"
+      wget -N $ftp_root$file
+
+      cmd="./OceaneosImage.sh --input $file --debug 2 --zoom $zoom --mapbox_account $mapbox_account"
       echo $cmd
+      ./OceaneosImage.sh --input $file --debug 2 --zoom $zoom --mapbox_account $mapbox_account
   done
 done
 

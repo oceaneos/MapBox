@@ -1,0 +1,10 @@
+*.vrt
+blue2red.*
+*.png
+*.mbtiles
+*.TIFF
+metadata.json
+googlemaps.html
+openlayers.html
+tilemapresource.xml
+leaflet.html
