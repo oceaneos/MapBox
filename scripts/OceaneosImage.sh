@@ -2,10 +2,14 @@
 # Copyright 2016 Oceaneos Environmental Solutions, Inc.  All rights reserved.
 # Oceaneos Image Pipeline
 #   Usage
-#     ./OceaneosImage.sh input_tiff --debug 2 --zoom 1 --mapbox_account roblabs
+#     ./OceaneosImage.sh input_tiff --debug 2 --format PNG --zoom 1 --mapbox_account roblabs
 #
+#  --format be can either of these UPPER CASE choices
+#     PNG
+#     WEBP
+
 #   Example
-#     ./OceaneosImage.sh MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF --zoom 1 --mapbox_account roblabs
+#     ./OceaneosImage.sh MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF --format PNG --zoom 1 --mapbox_account roblabs
 
 # command line options
 while [[ "$#" > 1 ]]; do case $1 in
@@ -13,11 +17,14 @@ while [[ "$#" > 1 ]]; do case $1 in
     --debug) debug="$2";;
     --zoom) zoom="$2";;
     --mapbox_account) mapbox_account="$2";;
+    --format) format="$2";;
     *) break;;
   esac; shift; shift
 done
 
 
+# Image output parameters
+format_lower=png
 
 
 # Assume the date stamp is the third field of the file name
@@ -58,6 +65,7 @@ if [ $debug -gt 1 ]
 then
   echo "parameters"
   echo "  debug =" $debug
+  echo "  format =" $format
   echo "  input_tiff =" $input_tiff
   echo "  zoom =" $zoom
   echo "  mapbox_account =" $mapbox_account
@@ -92,13 +100,30 @@ gdal_translate -of vrt -expand rgba -a_nodata 0 $blue_red_tiff $final_vrt
 
 # Prepare temp.vrt for "slippy" map tiles, one step closer to Mapbox
 #  Zoom level 0 (whole earth) to a reasonalbe zoom level of 6.
-gdal2tilesp.py -z 0-$zoom $final_vrt
+gdal2tilesp.py -z 0-$zoom -f $format $final_vrt
+if [ $zoom -gt 2 ]
+then
+  echo "Due to an (unexplained) issue with the tile cutter, we need to rerun the tile cutter at lower zooms "
+  #  -e 'resumes' the the tilecutter and 
+  gdal2tilesp.py -z 5 -w all -e -f $format $final_vrt
+  gdal2tilesp.py -z 4 -w all -e -f $format $final_vrt
+  gdal2tilesp.py -z 3 -w all -e -f $format $final_vrt
+  gdal2tilesp.py -z 2 -w all -e -f $format $final_vrt
+  gdal2tilesp.py -z 1 -w all -e -f $format $final_vrt
+  gdal2tilesp.py -z 0 -w all -e -f $format $final_vrt
+fi
+
+# Update the metadata for attribution
+# attribution for NASA NEO
+json -I -f $file_name_no_ext/metadata.json -e 'this.name="'$file_name_no_ext'"'
+json -I -f $file_name_no_ext/metadata.json -e 'this.description="'$file_name_no_ext'"'
+json -I -f $file_name_no_ext/metadata.json -e 'this.attribution="<a href=\"http://neo.sci.gsfc.nasa.gov\" target=\"_blank\">© NASA NEO</a>"'
+
 
 # pack the cut tiles into an mbtile, https://github.com/mapbox/mbtiles-spec
 # creates a file called
 #    $file_name_no_ext.mbtiles
-# TODO - need attribution for NASA NEO
-mb-util $file_name_no_ext $mbtiles
+mb-util --image_format=$format_lower $file_name_no_ext $mbtiles
 
 
 #  Upload to Mapbox
