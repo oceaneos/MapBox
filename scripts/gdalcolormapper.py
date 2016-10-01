@@ -36,15 +36,34 @@ args = parser.parse_args()
 # Example Python code for various Python commands for GDAL
 # https://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html
 
+if( __debug__):
+  countToPrint = 10  # Print out only the first 10 elements
 
 if (args.no_green_color_map):
     print "--no-green was passed in"
 
+csvData = []
 if (args.csv_color_map):
     print "--csv-color-map was passed in " + args.csv_color_map
 
+    import csv
+    with open(args.csv_color_map, 'rb') as csvfile:
+      reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+      rowNumber = 0
+      for row in reader:
+        csvData.append(row)
+        rowNumber += 1
+        if (rowNumber < countToPrint):
+          print row
+
+      #  after the for loop, skip the first row as it is the header
+      csvData.pop(0)
+
+
 # Python Constants
+RED_VALUE_RGBA = 0
 GREEN_VALUE_RGBA = 1
+BLUE_VALUE_RGBA = 2
 ZERO = 0
 
 dataset = gdal.Open( args.input, gdal.GA_Update )
@@ -60,9 +79,6 @@ inputColorTable = b1.GetColorTable()
 outputColorTable = inputColorTable
 count = inputColorTable.GetCount()
 
-
-if( __debug__):
-  countToPrint = 10  # Print out only the first 10 elements
 
 # Print out the first several entries of the original
 print "-----"
@@ -80,11 +96,27 @@ for i in range( 0, count):
   entry = inputColorTable.GetColorEntry( i )     #  inputColorTable.GetColorEntry(0) = (8, 0, 88, 255)
   entryAsList = list(entry)                     #  Make a copy of the entry, as a Python list
 
+  if (args.csv_color_map):
+    # color map data looks like ['0.0', '0', '0', '0'], which is Scaler, R, G, B
+    SCALAR_RGB_RED = 1
+    SCALAR_RGB_GREEN = 2
+    SCALAR_RGB_BLUE = 3
+
+
+    entryAsList[RED_VALUE_RGBA] = int(csvData[i][SCALAR_RGB_RED])
+    entryAsList[GREEN_VALUE_RGBA] = int(csvData[i][SCALAR_RGB_GREEN])
+    entryAsList[BLUE_VALUE_RGBA] = int(csvData[i][SCALAR_RGB_BLUE])
+
+    outputColorTable.SetColorEntry( i, tuple(entryAsList))  #  Convert back to a Python tuple, and set the new color Entry
+    if (i < countToPrint):
+      print "CSV RGBA = ", outputColorTable.GetColorEntry( i)
+    continue
+
   if (args.no_green_color_map):
     entryAsList[GREEN_VALUE_RGBA] = ZERO        #  Set the Green channel to ZERO
     outputColorTable.SetColorEntry( i, tuple(entryAsList))  #  Convert back to a Python tuple, and set the new color Entry
     if (i < countToPrint):
-      print "RGBA = ", outputColorTable.GetColorEntry( i)
+      print "noG RGBA = ", outputColorTable.GetColorEntry( i)
     continue
 
   if not entry:
