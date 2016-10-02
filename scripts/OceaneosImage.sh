@@ -19,6 +19,7 @@ while [[ "$#" > 1 ]]; do case $1 in
     --input) input_tiff="$2";;
     --output_folder) output_folder="$2";;
     --color_map) color_map="$2";;
+    --inverted-color-map) inverted-color-map="$2";;
     --debug) debug="$2";;
     --zoom) zoom="$2";;
     --mapbox_account) mapbox_account="$2";;
@@ -57,14 +58,15 @@ new_color_table=$output_folder/$input_date.new.colortable.vrt
 new_color_table_CHECK=$output_folder/check.$input_date.new.colortable.vrt
 
 # Final VRT, ready to be cut up into layers for Mapbox.
+final_file_name_root=$color_map_name-$file_name_no_ext
 final_vrt=$output_folder/$file_name_no_ext.vrt
 final_tiles_folder=$output_folder/$file_name_no_ext
 
 #TIFF files
-new_tiff=$output_folder/$color_map_name.$file_name_no_ext.tif
+new_tiff=$output_folder/$final_file_name_root.tif
 
 # Mbtile
-mbtiles=$output_folder/$file_name_no_ext.mbtiles
+mbtiles=$output_folder/$final_file_name_root.mbtiles
 
 # ----------------
 # make sure to remove any existing folders or .mbtiles so we know we have a fresh file
@@ -106,7 +108,7 @@ if [ $color_map == "noG" ]
   gdalcolormapper.py -noG -i $current_color_table -o $new_color_table
   else
     echo $color_map
-  gdalcolormapper.py -i $current_color_table -o $new_color_table -csv $color_map
+  gdalcolormapper.py -i $current_color_table -o $new_color_table -csv $color_map #--inverted-color-map
 fi
 
 # Apply the new color look up table
