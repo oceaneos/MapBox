@@ -1,19 +1,23 @@
 # Copyright 2016 ePi Rational, Inc.  All rights reserved.
 # Copyright 2016 Oceaneos Environmental Solutions, Inc.  All rights reserved.
 # Oceaneos Image Pipeline
-#   Usage
-#     ./OceaneosImage.sh input_tiff --debug 2 --format PNG --zoom 1 --mapbox_account roblabs
+#   Example Usage
+#     ./OceaneosImage.sh --input MY1DMM_CHLORA_2002-07.TIFF --output_folder ../../output --zoom 6  --format WEBP --mapbox_account oceaneos
 #
 #  --format be can either of these UPPER CASE choices
 #     PNG
 #     WEBP
+#
+#  Debug - You can skip the Mapbox.com upload by omitting --mapbox_account
+#  Debug - You can skip the tile cutting by omitting --format
 
-#   Example
-#     ./OceaneosImage.sh MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF --format PNG --zoom 1 --mapbox_account roblabs
+
+
 
 # command line options
 while [[ "$#" > 1 ]]; do case $1 in
     --input) input_tiff="$2";;
+    --output_folder) output_folder="$2";;
     --debug) debug="$2";;
     --zoom) zoom="$2";;
     --mapbox_account) mapbox_account="$2";;
@@ -43,26 +47,28 @@ input_date="${array[2]}"
 # Several steps implies several file names in Pipeline
 #   These are all the files that will be generated from the input
 # VRT files, used for color tables
-blue_yellow_color_table=$input_date.blue-yellow.colortable.vrt
-blue_red_color_table=$input_date.blue-red.colortable.vrt
-blue_red_color_table_CHECK=check.$input_date.blue-red.colortable.vrt
+blue_yellow_color_table=$output_folder/$input_date.blue-yellow.colortable.vrt
+blue_red_color_table=$output_folder/$input_date.blue-red.colortable.vrt
+blue_red_color_table_CHECK=$output_folder/check.$input_date.blue-red.colortable.vrt
 
 # Final VRT, ready to be cut up into layers for Mapbox.
-final_vrt=$file_name_no_ext.vrt
+final_vrt=$output_folder/$file_name_no_ext.vrt
+final_tiles_folder=$final_vrt
 
 #TIFF files
-blue_red_tiff=blue2red.$file_name_no_ext.tif
+blue_red_tiff=$output_folder/blue2red.$file_name_no_ext.tif
 
 # Mbtile
-mbtiles=$file_name_no_ext.mbtiles
+mbtiles=$output_folder/$file_name_no_ext.mbtiles
 
 # ----------------
 # make sure to remove any existing folders or .mbtiles so we know we have a fresh file
 rm -rf $file_name_no_ext
 rm $mbtiles
 
-if [ $debug -gt 1 ]
-then
+# If $debug is set to any value, then execute this block
+if [ ! -z "$debug" ]
+  then
   echo "parameters"
   echo "  debug =" $debug
   echo "  format =" $format
@@ -78,6 +84,7 @@ then
   echo "  blue_red_color_table_CHECK =" $blue_red_color_table_CHECK
   echo "  blue_red_tiff =" $blue_red_tiff
   echo "  final_vrt =" $final_vrt
+  echo "  final_tiles_folder =" $file_name_no_ext
   echo "  mbtiles =" $mbtiles
   echo ""
 fi
@@ -87,7 +94,7 @@ fi
 gdal_translate -of VRT $input_tiff $blue_yellow_color_table
 
 #  In order to make a Blue to Red color ramp, remove the green channel
-gdalNoGreen.py $blue_yellow_color_table $blue_red_color_table
+gdalcolormapper.py -noG -i $blue_yellow_color_table -o $blue_red_color_table
 
 # Apply the blue to red color look up table
 gdal_translate $blue_red_color_table $blue_red_tiff
@@ -96,28 +103,33 @@ gdal_translate $blue_red_color_table $blue_red_tiff
 gdal_translate -of VRT $blue_red_tiff $blue_red_color_table_CHECK
 
 # Expand the data to four bands, rgba, and assign NODATA for transparency over land masses
-gdal_translate -of vrt -expand rgba -a_nodata 0 $blue_red_tiff $final_vrt
+gdal_translate -of vrt -expand rgba -a_nodata 0 $blue_red_tiff $final_tiles_folder
 
 # Prepare temp.vrt for "slippy" map tiles, one step closer to Mapbox
 #  Zoom level 0 (whole earth) to a reasonalbe zoom level of 6.
-gdal2tilesp.py -z 0-$zoom -f $format $final_vrt
-if [ $zoom -gt 2 ]
-then
-  echo "Due to an (unexplained) issue with the tile cutter, we need to rerun the tile cutter at lower zooms "
-  #  -e 'resumes' the the tilecutter and 
-  gdal2tilesp.py -z 5 -w all -e -f $format $final_vrt
-  gdal2tilesp.py -z 4 -w all -e -f $format $final_vrt
-  gdal2tilesp.py -z 3 -w all -e -f $format $final_vrt
-  gdal2tilesp.py -z 2 -w all -e -f $format $final_vrt
-  gdal2tilesp.py -z 1 -w all -e -f $format $final_vrt
-  gdal2tilesp.py -z 0 -w all -e -f $format $final_vrt
-fi
+# if $mapbox_account is NOT null, then upload to Mapbox.com/Studio
+if [ ! -z "$format" ]
+  then
+    gdal2tilesp.py -z 0-$zoom -f $format $final_vrt
+    if [ $zoom -gt 2 ]
+    then
+      echo "Due to an (unexplained) issue with the tile cutter, we need to rerun the tile cutter at lower zooms "
+      #  -e 'resumes' the the tilecutter and
+      gdal2tilesp.py -z 5 -w all -e -f $format $final_vrt
+      gdal2tilesp.py -z 4 -w all -e -f $format $final_vrt
+      gdal2tilesp.py -z 3 -w all -e -f $format $final_vrt
+      gdal2tilesp.py -z 2 -w all -e -f $format $final_vrt
+      gdal2tilesp.py -z 1 -w all -e -f $format $final_vrt
+      gdal2tilesp.py -z 0 -w all -e -f $format $final_vrt
+    fi
 
-# Update the metadata for attribution
-# attribution for NASA NEO
-json -I -f $file_name_no_ext/metadata.json -e 'this.name="'$file_name_no_ext'"'
-json -I -f $file_name_no_ext/metadata.json -e 'this.description="'$file_name_no_ext'"'
-json -I -f $file_name_no_ext/metadata.json -e 'this.attribution="<a href=\"http://neo.sci.gsfc.nasa.gov\" target=\"_blank\">© NASA NEO</a>"'
+    # Update the metadata for attribution
+    # attribution for NASA NEO
+    json -I -f $file_name_no_ext/metadata.json -e 'this.name="'$file_name_no_ext'"'
+    json -I -f $file_name_no_ext/metadata.json -e 'this.description="'$file_name_no_ext'"'
+    json -I -f $file_name_no_ext/metadata.json -e 'this.attribution="<a href=\"http://neo.sci.gsfc.nasa.gov\" target=\"_blank\">© NASA NEO</a>"'
+
+fi
 
 
 # pack the cut tiles into an mbtile, https://github.com/mapbox/mbtiles-spec
@@ -129,5 +141,24 @@ mb-util --image_format=$format_lower $file_name_no_ext $mbtiles
 #  Upload to Mapbox
 # Be sure to set the environment variable
 # export MAPBOX_SUPER_TOKEN=<token from mapbox>
-echo "mapbox --access-token=\$MAPBOX_SUPER_TOKEN upload $file_name_no_ext.mbtiles $mapbox_account.$file_name_no_ext"
-mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $file_name_no_ext.mbtiles $mapbox_account.$file_name_no_ext
+
+# if $mapbox_account is NOT null, then upload to Mapbox.com/Studio
+if [ ! -z "$mapbox_account" ]
+  then
+    echo "mapbox --access-token=\$MAPBOX_SUPER_TOKEN upload $file_name_no_ext.mbtiles $mapbox_account.$file_name_no_ext"
+    mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $file_name_no_ext.mbtiles $mapbox_account.$file_name_no_ext
+fi
+
+
+###  Cleanup by removing old files
+# If $debug is null, then remove extra files.  $debug true keeps files around
+if [ -z "$debug" ]
+  then
+    echo "deleting unused files"
+    rm $blue_yellow_color_table
+    rm $blue_red_color_table
+    rm $blue_red_color_table_CHECK
+    rm $blue_red_tiff
+    rm $final_vrt
+    rm -rf $file_name_no_ext
+fi

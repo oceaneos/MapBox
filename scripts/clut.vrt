@@ -270,7 +270,7 @@
       <Entry c1="0" c2="0" c3="0" c4="255" />
     </ColorTable>
     <SimpleSource>
-      <SourceFilename relativeToVRT="1">MY1DMM_CHLORA_2016-07-01_rgb_3600x1800.TIFF</SourceFilename>
+      <SourceFilename relativeToVRT="1">MY1DMM_CHLORA_2002-07.TIFF</SourceFilename>
       <SourceBand>1</SourceBand>
       <SourceProperties RasterXSize="3600" RasterYSize="1800" DataType="Byte" BlockXSize="256" BlockYSize="256" />
       <SrcRect xOff="0" yOff="0" xSize="3600" ySize="1800" />
