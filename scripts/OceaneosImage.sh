@@ -70,7 +70,7 @@ mbtiles=$output_folder/$final_file_name_root.mbtiles
 
 # ----------------
 # make sure to remove any existing folders or .mbtiles so we know we have a fresh file
-rm -rf $file_name_no_ext
+rm -rf $final_tiles_folder
 rm $mbtiles
 
 # If $debug is set to any value, then execute this block
@@ -159,8 +159,9 @@ fi
 # if $mapbox_account is NOT null, then upload to Mapbox.com/Studio
 if [ ! -z "$mapbox_account" ]
   then
-    echo "mapbox --access-token=\$MAPBOX_SUPER_TOKEN upload $file_name_no_ext.mbtiles $mapbox_account.$file_name_no_ext"
-    mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $file_name_no_ext.mbtiles $mapbox_account.$file_name_no_ext
+    MAPBOX_SUPER_TOKEN=sk.eyJ1IjoibXJpZWRpamsiLCJhIjoiY2l0ZHN6N3NqMDFsbDJubzlzb3Rja3g4eiJ9.m3zl0GxGoQ26e_3u2yt35g
+    echo "mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $mbtiles $mapbox_account.$final_file_name_root"
+    mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $mbtiles $mapbox_account.$final_file_name_root
 fi
 
 
