@@ -5,11 +5,7 @@
 # Processes them using the Oceaneos Imaging Pipeline
 
 #    wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/2016-07.TIFF
-#    ./OceaneosImage.sh --input --debug 2 --zoom 1 --mapbox_account roblabs
-#    wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/2016-08.TIFF
-#    ./OceaneosImage.sh --input --debug 2 --zoom 1 --mapbox_account roblabs
-#    wget -N ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/2016-09.TIFF
-#    ./OceaneosImage.sh --input --debug 2 --zoom 1 --mapbox_account roblabs
+#   ./OceaneosImage.sh --input MY1DMM_CHLORA_2002-07.TIFF --output_folder ../../output --zoom 2 --color_map kindlmann-table-byte-0256.csv --debug yarp
 
 # Testing parameters
 # Alternatively skip wget
@@ -23,6 +19,10 @@ wget_tiff=1
 preflight=0
 
 ftp_root=ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/
+extension=.TIFF
+# Use these values for Floating point
+# ftp_root=ftp://neoftp.sci.gsfc.nasa.gov/geotiff.float/MY1DMM_CHLORA/
+# extension=.FLOAT.TIFF
 root=MY1DMM_CHLORA
 min_year=2002
 # TODO  should be current year, but 'date +%Y', doesn't work properly in this script on macOS
@@ -32,35 +32,36 @@ months="01 02 03 04 05 06 07 08 09 10 11 12"
 
 mapbox_account=mriedijk
 zoom=6
+format=WEBP
+input_folder=../../input/
+output_folder=../../output
+color_map=kindlmann-table-byte-0256.csv
 
 
 for y in `seq $min_year $max_year`
 do
   for m in $months
   do
-    file="MY1DMM_CHLORA_$y-$m.TIFF"
+    file="MY1DMM_CHLORA_$y-$m$extension"
     echo ""
     echo "-----"
     echo "processing $file"
 
+    wgetCmd="wget -N $ftp_root$file"
+    echo $wgetCmd
+
     if [ $wget_tiff -eq 1 ]
     then
-
-      wgetCmd="wget -N $ftp_root$file"
-      echo $wgetCmd
-
-      if [ $preflight -eq 0 ]
-      then
-        wget -N $ftp_root$file
-      fi
+      wget -N $ftp_root$file
     fi
 
-    cmd="./OceaneosImage.sh --input $file --format WEBP --debug 2 --zoom $zoom --mapbox_account $mapbox_account"
+    cmd="./OceaneosImage.sh --input $input_folder$file --output_folder $output_folder --color_map $color_map --zoom $zoom --debug YES --format $format  --mapbox_account $mapbox_account"
     echo $cmd
 
     if [ $preflight -eq 0 ]
     then
-      ./OceaneosImage.sh --input $file --format WEBP --debug 2 --zoom $zoom --mapbox_account $mapbox_account
+      echo "processing pipeline"
+      ./OceaneosImage.sh --input $input_folder$file --output_folder $output_folder --color_map $color_map --zoom $zoom --debug YES --format $format  --mapbox_account $mapbox_account
     fi
 
   done

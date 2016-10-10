@@ -2,7 +2,7 @@
 # Copyright 2016 Oceaneos Environmental Solutions, Inc.  All rights reserved.
 # Oceaneos Image Pipeline
 #   Example Usage
-#     ./OceaneosImage.sh --input MY1DMM_CHLORA_2002-07.TIFF --output_folder ../../output --zoom 6  --format WEBP --mapbox_account oceaneos
+#     ./OceaneosImage.sh --input MY1DMM_CHLORA_2002-07.TIFF --output_folder ../../output --zoom 6 --color_map kindlmann-table-byte-0256.csv --debug yarp --format WEBP --mapbox_account oceaneos
 #
 #  --format be can either of these UPPER CASE choices
 #     PNG
@@ -40,7 +40,12 @@ format_lower=png
 #       echo "${array[2]}"
 #     will create the substring
 #       2016-07-01
-IFS='.' read -r -a fileName <<< "$input_tiff"
+
+IFS='/' read -r -a fileName <<< "$input_tiff"
+file_name_without_path="${fileName[3]}"
+echo $file_name_without_path
+
+IFS='.' read -r -a fileName <<< "$file_name_without_path"
 file_name_no_ext="${fileName[0]}"
 
 IFS='_' read -r -a array <<< "$file_name_no_ext"
