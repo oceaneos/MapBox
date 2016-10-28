@@ -11,7 +11,7 @@
 # Alternatively skip wget
 # set this 1 to wget files from the FTP SERVER_ROOT
 #  set to 0 to skip wget.  That is, if you've already downloaded a sample set
-wget_tiff=1
+wget_tiff=0
 
 # Alternatively, preflight the script to make sure its going to go off properly
 # set to 1 to echo the script call to the screen, but don't run the script
@@ -19,7 +19,7 @@ wget_tiff=1
 preflight=0
 
 ftp_root=ftp://neoftp.sci.gsfc.nasa.gov/geotiff/MY1DMM_CHLORA/
-extension=.TIFF
+extension=.png
 # Use these values for Floating point
 # ftp_root=ftp://neoftp.sci.gsfc.nasa.gov/geotiff.float/MY1DMM_CHLORA/
 # extension=.FLOAT.TIFF
@@ -33,9 +33,9 @@ months="01 02 03 04 05 06 07 08 09 10 11 12"
 mapbox_account=mriedijk
 zoom=6
 format=WEBP
-input_folder=../../input/
+input_folder=../../input/1-month-processed-images/
 output_folder=../../output
-color_map=kindlmann-table-byte-0256.csv
+color_map=none
 
 
 for y in `seq $min_year $max_year`

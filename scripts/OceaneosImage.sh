@@ -11,6 +11,10 @@
 #  Debug - You can skip the Mapbox.com upload by omitting --mapbox_account
 #  Debug - You can skip the tile cutting by omitting --format
 
+#  Case where Photoshop was used to process images
+#     ./OceaneosImage.sh --input ../../input/1-month-processed-images/MY1DMM_CHLORA_2002-08.png --output_folder ../../output --zoom 2 --color_map none --debug yarp --format WEBP
+#     ./OceaneosImage.sh --input ../../input/1-month-processed-images/MY1DMM_CHLORA_2002-08.png --output_folder ../../output --zoom 2 --color_map none --debug yarp --format WEBP --mapbox_account mriedijk
+
 
 
 
@@ -42,7 +46,7 @@ format_lower=png
 #       2016-07-01
 
 IFS='/' read -r -a fileName <<< "$input_tiff"
-file_name_without_path="${fileName[3]}"
+file_name_without_path="${fileName[4]}"
 echo $file_name_without_path
 
 IFS='.' read -r -a fileName <<< "$file_name_without_path"
@@ -71,11 +75,12 @@ final_tiles_folder=$output_folder/$file_name_no_ext
 new_tiff=$output_folder/$final_file_name_root.tif
 
 # Mbtile
-mbtiles=$output_folder/$final_file_name_root.mbtiles
+mbtiles=$output_folder/$file_name_no_ext.mbtiles
+mbtiles_name_mapbox=$mapbox_account.$file_name_no_ext
 
 # ----------------
 # make sure to remove any existing folders or .mbtiles so we know we have a fresh file
-rm -rf $final_tiles_folder
+# rm -rf $final_tiles_folder
 rm $mbtiles
 
 # If $debug is set to any value, then execute this block
@@ -100,6 +105,7 @@ if [ ! -z "$debug" ]
   echo "  final_vrt =" $final_vrt
   echo "  final_tiles_folder =" $final_tiles_folder
   echo "  mbtiles =" $mbtiles
+  echo "  mbtiles_name_mapbox =" $mbtiles_name_mapbox
   echo ""
 fi
 
@@ -107,23 +113,36 @@ fi
 #    with no modification it is the current color ramp.
 gdal_translate -of VRT $input_tiff $current_color_table
 
-if [ $color_map == "noG" ]
+if [ $color_map == "none" ]
   then
-  #  In order to make a Blue to Red color ramp, remove the green channel
-  gdalcolormapper.py -noG -i $current_color_table -o $new_color_table
+  #  Special case where the color map is already been applied
+  echo gdal_translate $input_tiff -a_ullr -180 90 180 -90 -a_srs EPSG:4326 $new_tiff
+  gdal_translate $input_tiff -a_ullr -180 90 180 -90 -a_srs EPSG:4326 $new_tiff
+
+  #
+  gdal_translate -of vrt $new_tiff $final_vrt
+
   else
-    echo $color_map
-  gdalcolormapper.py -i $current_color_table -o $new_color_table -csv $color_map #--inverted-color-map
+    if [ $color_map == "noG" ]
+      then
+      #  In order to make a Blue to Red color ramp, remove the green channel
+      gdalcolormapper.py -noG -i $current_color_table -o $new_color_table
+      else
+        echo $color_map
+      gdalcolormapper.py -i $current_color_table -o $new_color_table -csv $color_map #--inverted-color-map
+    fi
+
+    # Apply the new color look up table
+    gdal_translate $new_color_table $new_tiff
+
+    # Alternatively, check the new color table actually took by inspecting a VRT
+    gdal_translate -of VRT $new_tiff $new_color_table_CHECK
+
+    # Expand the data to four bands, rgba, and assign NODATA for transparency over land masses
+    gdal_translate -of vrt -expand rgba -a_nodata 0 $new_tiff $final_vrt
 fi
 
-# Apply the new color look up table
-gdal_translate $new_color_table $new_tiff
 
-# Alternatively, check the new color table actually took by inspecting a VRT
-gdal_translate -of VRT $new_tiff $new_color_table_CHECK
-
-# Expand the data to four bands, rgba, and assign NODATA for transparency over land masses
-gdal_translate -of vrt -expand rgba -a_nodata 0 $new_tiff $final_vrt
 
 # Prepare temp.vrt for "slippy" map tiles, one step closer to Mapbox
 #  Zoom level 0 (whole earth) to a reasonalbe zoom level of 6.
@@ -165,8 +184,8 @@ fi
 if [ ! -z "$mapbox_account" ]
   then
     MAPBOX_SUPER_TOKEN=sk.eyJ1IjoibXJpZWRpamsiLCJhIjoiY2l0ZHN6N3NqMDFsbDJubzlzb3Rja3g4eiJ9.m3zl0GxGoQ26e_3u2yt35g
-    echo "mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $mbtiles $mapbox_account.$final_file_name_root"
-    mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $mbtiles $mapbox_account.$final_file_name_root
+    echo "mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $mbtiles $mbtiles_name_mapbox"
+    mapbox --access-token=$MAPBOX_SUPER_TOKEN upload $mbtiles $mbtiles_name_mapbox
 fi
 
 
@@ -180,5 +199,5 @@ if [ -z "$debug" ]
     rm $new_color_table_CHECK
     rm $new_tiff
     rm $final_vrt
-    rm -rf $final_tiles_folder
+    # rm -rf $final_tiles_folder
 fi
